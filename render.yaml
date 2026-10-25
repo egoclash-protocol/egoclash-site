@@ -1,0 +1,28 @@
+# Render Blueprint for the EGOCLASH static site.
+# Static files only: no build step, everything in the repo root is published.
+services:
+  - type: web
+    runtime: static
+    name: egoclash-site
+    plan: free
+    staticPublishPath: .
+    autoDeployTrigger: commit
+    headers:
+      - path: /
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /index.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=86400, stale-while-revalidate=604800
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

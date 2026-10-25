@@ -1,0 +1,5 @@
+.env
+.env.*
+*.png.bak
+preview.png
+.DS_Store
