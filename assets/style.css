@@ -225,3 +225,15 @@ footer{padding:3rem 0 4rem;border-top:1px solid var(--panel-b);background:linear
   #sparks{display:none}
 }
 .tw iframe{border-radius:14px}
+
+/* ---------- DYOR notice ---------- */
+.dyor{border-block:1px solid rgba(255,194,58,.4);background:linear-gradient(90deg,rgba(255,122,26,.12),rgba(255,194,58,.08),rgba(255,122,26,.12));margin-top:1.2rem}
+.dyor-in{display:flex;align-items:center;gap:.9rem;padding:.8rem 0}
+.dyor-tag{flex:none;font:800 .75rem/1 var(--f-mono);letter-spacing:.16em;color:#1a0d00;background:var(--gold);padding:.4rem .6rem;border-radius:8px}
+.dyor p{margin:0;font-size:.95rem;line-height:1.45;color:#f1e6c8}
+.dyor p b{color:var(--gold)}
+@media(max-width:560px){.dyor-in{flex-direction:column;align-items:flex-start;gap:.5rem}}
+.disc b:first-child{display:block;font:700 .75rem/1 var(--f-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.7rem}
+.disc p{margin:0 0 .7rem;font-weight:500;color:var(--mut)}
+.disc ul{margin:0;padding-left:1.1rem;display:grid;gap:.5rem;font-weight:500;font-size:.92rem;color:var(--mut)}
+.disc li b{color:#fff}
