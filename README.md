@@ -32,5 +32,11 @@ TLS is issued automatically. Afterwards update `canonical`, `og:image` and `twit
 
 ## Notes
 
+- The home page is a 3D room drawn with a small hand-written WebGL2 renderer (`assets/room.js`). There are no libraries and no build step.
+- Without WebGL2 the same content shows as a normal scrolling page.
+- Files: `assets/data.js` (config, cast, scripted lines), `assets/room.js` (the room), `assets/app.js` (panels, live data, quote maker, sound).
+- The four screens, the dispute board and the cat are scripted fiction: edit `LORE`, `MOOD` and `DISPUTES` in `assets/data.js`. Only Marvin quotes the real 24h change.
 - Live market numbers come from the public DexScreener API in the browser; nothing is hardcoded.
-- Discord link: set `DISCORD_URL` at the top of `assets/app.js` to show the Discord buttons.
+- Top posts are a manual pick (`#p-posts` in `index.html`), last ranked by X view count on 12 Nov 2026.
+- Discord link: set `DISCORD_URL` at the top of `assets/data.js` to show the Discord buttons.
+- Easter egg: type `FEED ME A STRAY CAT` anywhere.
