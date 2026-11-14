@@ -28,8 +28,8 @@
 <link rel="preload" href="assets/fonts/JetBrainsMono.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/Unbounded.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://api.dexscreener.com" crossorigin>
-<link rel="stylesheet" href="assets/fonts.css">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/fonts.css?v=20261114">
+<link rel="stylesheet" href="assets/style.css?v=20261114">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -61,6 +61,8 @@
   </div>
 </header>
 <p id="hint" class="hint only3d">DRAG TO LOOK · TAP A SCREEN</p>
+<button class="pan l" id="pan-l" type="button" aria-label="Look left">◂</button>
+<button class="pan r" id="pan-r" type="button" aria-label="Look right">▸</button>
 
 <main id="main">
 <h1 class="sr" id="top">EGOCLASH ($EGOC) — Four AIs. One desk. Zero agreement.</h1>
@@ -155,6 +157,25 @@
   <p class="note">Renders on your device, nothing is uploaded. Fictional characters. Satire, not financial advice.</p>
 </section>
 
+<!-- ============ ASK THE DESK ============ -->
+<section class="panel" id="p-ask" aria-label="Ask the desk">
+  <p class="kicker">ASK THE DESK</p>
+  <h2>One question. <span class="hl">Four answers.</span></h2>
+  <p>Ask the desk anything. You get four answers that don't agree, on a card you can post.</p>
+  <form class="ask" id="ask-form" autocomplete="off">
+    <label class="sr" for="ask-in">Your question</label>
+    <input id="ask-in" type="text" maxlength="90" placeholder="Who owns the chair?" enterkeyhint="send">
+    <button class="btn" type="submit">ASK</button>
+  </form>
+  <canvas id="askcard" width="1080" height="1080" aria-label="Ask the desk card preview"></canvas>
+  <div class="row">
+    <button class="btn" type="button" id="ask-dl">DOWNLOAD PNG</button>
+    <a class="btn alt" id="ask-share" href="#" target="_blank" rel="noopener">SHARE ON X</a>
+    <button class="btn alt" type="button" id="ask-next">TODAY'S DISPUTE</button>
+  </div>
+  <p class="note">Scripted jokes, generated on your device. The desk never gives financial advice, and neither does this card.</p>
+</section>
+
 <!-- ============ POSTS ============ -->
 <section class="panel wide" id="p-posts" aria-label="Posts">
   <p class="kicker">POSTS</p>
@@ -238,13 +259,13 @@ I have started counting names instead of balances.</p>&mdash; EGOCLASH (@EgoClas
 <footer class="foot">
   <p class="dyor"><b>DYOR</b> Satire, not financial advice. Memecoins are highly volatile: you can lose everything. <a href="#p-about" data-open="about">Disclaimer</a></p>
   <nav class="dock" aria-label="Sections">
-    <a href="#top" data-open="home">DESK</a><a href="#p-market" data-open="market">MARKET</a><a href="#p-quote" data-open="quote">QUOTE</a><a href="#p-posts" data-open="posts">POSTS</a><a href="#p-audit" data-open="audit">AUDIT</a><a href="#p-links" data-open="links">LINKS</a><a href="#p-about" data-open="about">ABOUT</a>
+    <a href="#top" data-open="home">DESK</a><a href="#p-market" data-open="market">MARKET</a><a href="#p-ask" data-open="ask">ASK</a><a href="#p-quote" data-open="quote">QUOTE</a><a href="#p-posts" data-open="posts">POSTS</a><a href="#p-audit" data-open="audit">AUDIT</a><a href="#p-links" data-open="links">LINKS</a><a href="#p-about" data-open="about">ABOUT</a>
   </nav>
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="assets/data.js" defer></script>
-<script src="assets/room.js" defer></script>
-<script src="assets/app.js" defer></script>
+<script src="assets/data.js?v=20261114" defer></script>
+<script src="assets/room.js?v=20261114" defer></script>
+<script src="assets/app.js?v=20261114" defer></script>
 </body>
 </html>

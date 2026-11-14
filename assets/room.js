@@ -123,10 +123,10 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
 
   /* ticker band above the windows */
   const tickT = tex(2048, 64, true);
-  const ticker = quad([0, 5.95, -6.83], [11, .5, 1], 0, { mode: 1, tex: tickT, em: [1.2, 1.2, 1.2], uv: [.69, 1, 0, 0], refl: true, color: [0, 0, 0] });
+  const ticker = quad([0, 5.95, -6.83], [PORT ? 6 : 11, .5, 1], 0, { mode: 1, tex: tickT, em: [1.2, 1.2, 1.2], uv: [PORT ? .375 : .69, 1, 0, 0], refl: true, color: [0, 0, 0] });
   function drawTicker(d) { const g = tickT.g; g.fillStyle = "#040302"; g.fillRect(0, 0, 2048, 64); g.font = "700 34px " + MONO; g.textBaseline = "middle"; let x = 20; const seg = (t, c) => { g.fillStyle = c; g.fillText(t, x, 34); x += g.measureText(t).width + 46; };
     const gags = ["FEED ME A STRAY CAT", "04:12", "FOR THE RECORD", "CONSENSUS 0/4", "CHAIRS ARE FREE", "NOT FINANCIAL ADVICE"]; let k = 0;
-    while (x < 1900) { if (d) { seg("EGOC " + d.price, "#ffb000"); seg(d.arrow + " " + d.chg + " 24H", d.cls === "down" ? "#ff4d6a" : "#39ff8f"); if (x < 1500) { seg("MCAP " + d.mcap, "#ffb000"); seg("VOL " + d.vol, "#ffb000"); } } else seg(api.failed ? "EGOC FEED OFFLINE" : "EGOC FEED CONNECTING", "#ffb000"); seg(gags[k++ % gags.length], "#8a7f66"); }
+    while (x < 1900) { if (d) { seg("EGOC " + d.price, "#ffb000"); seg(d.arrow + " " + d.chg + " 24H", d.cls === "down" ? "#ff4d6a" : "#39ff8f"); if (x < 1500) { seg("MCAP " + d.mcap, "#ffb000"); seg("VOL " + d.vol, "#ffb000"); } } else seg("$EGOC", "#ffb000"); seg(gags[k++ % gags.length], d ? "#8a7f66" : "#c9b98a"); }
     upload(tickT); }
 
   /* mainframes + cables (the bus) */
@@ -197,8 +197,11 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
   picks.push({ name: "market", c: [0, HY, -1.0], r: 1.05 });
   function drawHolo(d) { const g = holoT.g; g.clearRect(0, 0, 1024, 512); g.fillStyle = "rgba(6,4,2,.66)"; g.fillRect(0, 0, 1024, 512); g.strokeStyle = "#ffb000"; g.lineWidth = 4; const br = (x, y, sx, sy) => { g.beginPath(); g.moveTo(x, y + 46 * sy); g.lineTo(x, y); g.lineTo(x + 46 * sx, y); g.stroke(); }; br(14, 14, 1, 1); br(1010, 14, -1, 1); br(14, 498, 1, -1); br(1010, 498, -1, -1);
     
-    g.textBaseline = "alphabetic"; g.fillStyle = "#ffb000"; g.font = "800 30px " + MONO; g.fillText("EGOC / USD · LIVE", 48, 74);
-    if (!d) { g.font = "800 56px " + MONO; g.fillText(api.failed ? "FEED OFFLINE" : "FEED CONNECTING…", 48, 270); upload(holoT); return; }
+    g.textBaseline = "alphabetic"; g.fillStyle = "#ffb000"; g.font = "800 30px " + MONO;
+    if (!d) { /* no live feed: show today's dispute instead of an empty price */
+      const q = api._q || E.DISPUTES[0]; g.fillText("TODAY'S DISPUTE", 48, 74); g.fillStyle = "#fff"; let fs = 92, rows; do { g.font = "900 " + fs + "px " + DISP; rows = wrap(g, q.q, 930); fs -= 6; } while (rows.length > 2 && fs > 44); fs += 6; rows.slice(0, 2).forEach((r, k) => g.fillText(r, 44, 190 + k * fs * 1.08));
+      g.fillStyle = "#ff4d6a"; g.fillRect(48, 390, 420, 72); g.fillStyle = "#000"; g.font = "800 40px " + MONO; g.fillText("CONSENSUS 0 / 4", 70, 440); upload(holoT); return; }
+    g.fillText("EGOC / USD · LIVE", 48, 74);
     g.fillStyle = "#fff"; g.font = "900 104px " + DISP; g.fillText(d.price, 44, 196);
     const up = d.cls !== "down", col = up ? "#39ff8f" : "#ff4d6a"; g.fillStyle = col; g.font = "800 50px " + MONO; g.fillText(d.arrow + " " + d.chg + " · 24H", 48, 268);
     if (d.shape && d.shape.length > 2) { const mn = Math.min(...d.shape), mx = Math.max(...d.shape), sp = (mx - mn) || 1, n = d.shape.length; const pt = k => [60 + k / (n - 1) * 900, 440 - (d.shape[k] - mn) / sp * 120];
@@ -207,7 +210,7 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
     g.fillStyle = "#b9a56c"; g.font = "600 22px " + MONO; g.textAlign = "right"; g.fillText("MCAP " + d.mcap + " · VOL " + d.vol + " · LIQ " + d.liq, 980, 74); g.fillText("24H SHAPE · SOURCE DEXSCREENER · NOT A PREDICTION", 980, 492); g.textAlign = "left";
     upload(holoT); }
 
-  const boardT = tex(768, 512), BP = [-7.4, 3.7, -5.6], BRY = .5;
+  const boardT = tex(768, 512), BP = PORT ? [-5.0, 4.45, -5.6] : [-7.4, 3.7, -5.6], BRY = .5;
   box(add(BP, rotY([0, 0, -.06], BRY)), [3.75, 2.55, .08], BRY, { color: DARK });
   quad(BP, [3.6, 2.4, 1], BRY, { mode: 1, tex: boardT, em: [.95, .95, .95], refl: true, color: [0, 0, 0] });
   picks.push({ name: "board", c: BP, r: 1.5 });
@@ -216,9 +219,9 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
     g.fillStyle = "#fff"; g.font = "900 44px " + DISP; let y = 128; for (const r of wrap(g, d.q, 720)) { g.fillText(r, 24, y); y += 52; }
     g.font = "600 23px " + MONO; y = Math.max(y + 14, 232); E.DESK.forEach(id => { g.fillStyle = E.WHO[id].color; const rows = wrap(g, E.WHO[id].name + ": " + d[id], 720).slice(0, 2); rows.forEach(r => { g.fillText(r, 24, y); y += 30; }); y += 6; });
     g.fillStyle = "#ff4d6a"; g.fillRect(24, 444, 300, 48); g.fillStyle = "#000"; g.font = "800 26px " + MONO; g.fillText("CONSENSUS 0 / 4", 40, 477); upload(boardT); }
-  const clockT = tex(512, 256), KP = [-7.4, 5.45, -5.6];
+  const clockT = tex(512, 256), KP = PORT ? [-5.0, 6.2, -5.6] : [-7.4, 5.45, -5.6];
   quad(KP, [1.7, .85, 1], BRY, { mode: 1, tex: clockT, em: [1.05, 1.05, 1.05], refl: true, color: [0, 0, 0] });
-  const PP = [7.4, 3.7, -5.6], postsT = tex(768, 512);
+  const PP = PORT ? [5.0, 4.45, -5.6] : [7.4, 3.7, -5.6], postsT = tex(768, 512);
   box(add(PP, rotY([0, 0, -.06], -BRY)), [3.75, 2.55, .08], -BRY, { color: DARK });
   quad(PP, [3.6, 2.4, 1], -BRY, { mode: 1, tex: postsT, em: [.95, .95, .95], refl: true, color: [0, 0, 0] });
   picks.push({ name: "posts", c: PP, r: 1.5 });
@@ -226,12 +229,12 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
     g.fillStyle = "#4da3ff"; g.font = "800 26px " + MONO; g.fillText("DR. PONZI", 24, 112); g.fillStyle = "#e8e2d0"; g.font = "600 27px " + MONO; let y = 158;
     for (const r of ["1,000 people who believe in a coin", "make a market.", "100 who stay after a bad day", "make a community.", "I lost my chair trying."]) { g.fillText(r, 24, y); y += 38; }
     g.fillStyle = "#4da3ff"; g.fillRect(24, 444, 250, 48); g.fillStyle = "#000"; g.font = "800 26px " + MONO; g.fillText("READ THE DESK", 40, 477); upload(postsT); }
-  const LP2 = [7.4, 5.45, -5.6], linksT = tex(512, 256);
+  const LP2 = PORT ? [5.0, 6.2, -5.6] : [7.4, 5.45, -5.6], linksT = tex(512, 256);
   quad(LP2, [1.7, .85, 1], -BRY, { mode: 1, tex: linksT, em: [1.05, 1.05, 1.05], refl: true, color: [0, 0, 0] });
   picks.push({ name: "links", c: LP2, r: .9 });
   function drawLinks() { const g = linksT.g; g.fillStyle = "#020703"; g.fillRect(0, 0, 512, 256); g.strokeStyle = "#39ff8f"; g.lineWidth = 8; g.strokeRect(14, 14, 484, 228); g.fillStyle = "#39ff8f"; g.shadowColor = "#39ff8f"; g.shadowBlur = 22; g.textAlign = "center"; g.font = "900 104px " + DISP; g.fillText("LINKS", 256, 150); g.shadowBlur = 0; g.font = "700 24px " + MONO; g.fillText("EVERY DOOR TO THE DESK", 256, 208); g.textAlign = "left"; upload(linksT); }
   /* the logo, made real: an arcade cabinet (about) */
-  const AP = [-6.9, 0, -2.4], ARY = .55, logoT = tex(512, 512);
+  const AP = [PORT ? -4.9 : -6.9, 0, -2.4], ARY = .55, logoT = tex(512, 512);
   box(add(AP, [0, 1.15, 0]), [1.2, 2.3, 1.0], ARY, { color: [.5, .2, .03], em: [.07, .028, 0], spec: .6 });
   box(add(AP, rotY([0, 2.2, .51], ARY)), [1.2, .2, .03], ARY, { em: mulS(AMBER, 1.2), refl: true });
   quad(add(AP, rotY([0, 1.45, .512], ARY)), [.98, .98, 1], ARY, { mode: 1, tex: logoT, em: [1, 1, 1], refl: true, color: [0, 0, 0] });
@@ -240,7 +243,7 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
   function drawLogo(img) { const g = logoT.g; g.fillStyle = "#0a0420"; g.fillRect(0, 0, 512, 512); if (img) g.drawImage(img, 0, 0, 512, 512); else { g.fillStyle = "#ffb000"; g.textAlign = "center"; g.font = "900 96px " + DISP; g.fillText("$EGOC", 256, 280); g.textAlign = "left"; } upload(logoT); }
   (function () { const im = new Image(); im.onload = () => drawLogo(im); im.src = "assets/egoc_logo_640.webp"; })();
   /* the printer (quote cards) */
-  const QP = [6.9, 0, -2.4], QRY = -.55, cardT = tex(256, 320);
+  const QP = [PORT ? 4.9 : 6.9, 0, -2.4], QRY = -.55, cardT = tex(256, 320);
   box(add(QP, [0, .45, 0]), [.95, .9, .75], QRY, { color: DARK, spec: .5 });
   box(add(QP, [0, 1.08, 0]), [1.1, .36, .85], QRY, { color: [.2, .2, .22], spec: .7 });
   box(add(QP, rotY([.38, 1.12, .43], QRY)), [.08, .04, .02], QRY, { em: [.3, 2, .8] });
@@ -281,12 +284,12 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
     if (mon[name]) { const i = mon[name].i; return { pos: add([MX[i], 1.9 + MY[i], MZ[i]], rotY([0, .25, 4.5], MRY[i] * .6)), tgt: [MX[i], 1.72 + MY[i], MZ[i]] }; }
     if (name === "cat") return { pos: add(cat.pos, [.5, .95, 2.3]), tgt: add(cat.pos, [0, .3, 0]) };
     if (name === "market") return { pos: [0, HY - .6, 4.6], tgt: [0, HY, -1.0] };
-    if (name === "posts") return { pos: [3.0, 3.3, 1.4], tgt: PP };
+    if (name === "posts") return { pos: add(PP, [-4.4, -.4, 7.0]), tgt: PP };
     if (name === "audit") return { pos: [0, 4.7, 2.6], tgt: [0, 1.9, -4.7] };
-    if (name === "board") return { pos: [-3.0, 3.3, 1.4], tgt: BP };
-    if (name === "about") return { pos: [-5.0, 2.1, 2.6], tgt: add(AP, [0, 1.35, 0]) };
-    if (name === "quote") return { pos: [5.0, 2.1, 2.6], tgt: add(QP, [0, 1.45, 0]) };
-    if (name === "links") return { pos: [2.8, 4.0, 1.6], tgt: LP2 };
+    if (name === "board") return { pos: add(BP, [4.4, -.4, 7.0]), tgt: BP };
+    if (name === "about") return { pos: add(AP, [1.9, 2.1, 5.0]), tgt: add(AP, [0, 1.35, 0]) };
+    if (name === "quote") return { pos: add(QP, [-1.9, 2.1, 5.0]), tgt: add(QP, [0, 1.45, 0]) };
+    if (name === "links") return { pos: add(LP2, [-4.6, -1.45, 7.2]), tgt: LP2 };
     return null; }
   function camGoal(t) {
     const p = portrait(); let g = cam.focus && focusGoal(cam.focus);
@@ -362,10 +365,10 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
   api.shift = (sx, sy) => { cam.gsx = sx; cam.gsy = sy; };
   api.drag = (dx, dy) => { if (portrait()) cam.pan = clamp(cam.pan - dx * .014, -6.4, 6.4); else cam.yaw = clamp(cam.yaw - dx * .0022, -.5, .5); cam.pitch = clamp(cam.pitch + dy * .0008, -.05, .16); };
   api.zoom = d => { cam.zoom = clamp(cam.zoom + d * .0006, .72, 1.25); };
-  api.panTo = x => { cam.pan = clamp(x, -3.9, 3.9); };
+  api.panTo = x => { cam.pan = clamp(x, -6.4, 6.4); }; api.panBy = d => { cam.pan = clamp(Math.round((cam.pan + d) / 3.2) * 3.2, -6.4, 6.4); return cam.pan; }; api.port = PORT;
   api.screen = (id, old, cur, flash) => { const m = mon[id]; if (!m) return; m.old = old; m.cur = cur; if (flash) m.flash = Math.min(1, m.flash + .35); drawScreen(id); };
   api.market = d => { api._d = d; api.failed = !d; drawTicker(d); drawHolo(d); };
-  api.dispute = d => { api._q = d; drawBoard(d); };
+  api.dispute = d => { api._q = d; drawBoard(d); if (!api._d) drawHolo(null); };
   api.anchor = name => { if (mon[name]) { const i = mon[name].i; return [MX[i], PORT && !MY[i] ? 1.0 : 2.52 + MY[i], MZ[i] + (PORT && !MY[i] ? .5 : 0)]; } if (name === "cat") return add(cat.pos, [0, 1.12, 0]); if (name === "market") return [0, HY + .9, -1.0]; if (name === "board") return add(BP, [0, -.82, 0]); if (name === "posts") return add(PP, [0, -.82, 0]); if (name === "links") return add(LP2, [0, .62, 0]); if (name === "about") return add(AP, [0, 2.62, 0]); if (name === "quote") return add(QP, [0, 2.5, 0]); if (name === "audit") return [5.1, 4.0, -4.5]; return null; };
   api.project = p => { const x = VP[0] * p[0] + VP[4] * p[1] + VP[8] * p[2] + VP[12], y = VP[1] * p[0] + VP[5] * p[1] + VP[9] * p[2] + VP[13], w = VP[3] * p[0] + VP[7] * p[1] + VP[11] * p[2] + VP[15]; return w <= .1 ? null : [(x / w * .5 + .5), (1 - (y / w * .5 + .5))]; };
   api.pick = (nx, ny) => { const f = norm(sub(cam.tgt, cam.pos)), r = norm(cross(f, [0, 1, 0])), up = cross(r, f); const d = norm(add(add(f, mulS(r, (nx + cam.sx) * tanH * aspect)), mulS(up, (ny + cam.sy) * tanH))); let best = null, bt = 1e9;
@@ -373,7 +376,10 @@ void main(){ float d=length(gl_PointCoord-.5); o=vec4(vec3(1.,.82,.55)*smoothste
   api.redraw = () => { E.DESK.forEach(drawScreen); drawClock(); drawPosts(); drawLinks(); drawCardT(); drawTicker(api._d || null); drawHolo(api._d || null); drawBoard(api._q || E.DISPUTES[0]); };
 
   drawClock(); drawPosts(); drawLinks(); drawCardT(); drawLogo(null); drawTicker(null); drawHolo(null); drawBoard(E.DISPUTES[0]); E.DESK.forEach(drawScreen); resize();
-  addEventListener("resize", () => { if ((innerWidth / innerHeight < .8) !== PORT) location.reload(); else resize(); });
+  addEventListener("resize", resize);
+  /* The layout is chosen once. Re-pick it only when the device is really rotated (never when a keyboard resizes the page). */
+  const mq = matchMedia("(orientation: portrait)"); let wasP = mq.matches;
+  addEventListener("orientationchange", () => setTimeout(() => { if (mq.matches !== wasP && (innerWidth / innerHeight < .8) !== PORT) location.reload(); wasP = mq.matches; }, 350));
   canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); document.documentElement.classList.remove("is3d"); });
   requestAnimationFrame(frame);
   return api;

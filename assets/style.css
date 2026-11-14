@@ -74,6 +74,10 @@ a{color:var(--amber)}
 .pick{--c:var(--green);min-height:42px;padding:.55rem .7rem;background:#000;border:1px solid var(--c);color:var(--c);font:800 .7rem/1 var(--mono);cursor:pointer}
 .pick.on{background:var(--c);color:#000}
 #card{width:100%;height:auto;aspect-ratio:1;border:1px solid var(--line);margin-bottom:.9rem}
+.ask{display:flex;gap:.5rem;margin:0 0 .9rem}
+.ask input{flex:1;min-width:0;height:46px;padding:0 .8rem;background:#000;border:1px solid var(--amber);color:var(--green);font:600 .95rem/1 var(--mono);border-radius:0}
+.ask input:focus{outline:none;box-shadow:0 0 0 2px rgba(255,176,0,.3)}
+#askcard{width:100%;height:auto;aspect-ratio:1;border:1px solid var(--line);margin-bottom:.9rem}
 .field{display:block;font:700 .62rem/1 var(--mono);letter-spacing:.14em;color:var(--mut);margin-bottom:.45rem}
 textarea{width:100%;resize:vertical;font:500 .9rem/1.5 var(--mono);color:var(--green);background:#000;border:1px solid var(--line);padding:.65rem .75rem;border-radius:0}
 textarea:focus{border-color:var(--amber);outline:none}
@@ -147,7 +151,9 @@ textarea:focus{border-color:var(--amber);outline:none}
 .x:hover{background:var(--amber);color:#000}
 @media(max-width:899px){
   .is3d .panel,.is3d .panel.wide{top:auto;left:0;right:0;bottom:0;width:100%;height:64vh;border-width:1px 0 0;transform:translateY(105%);z-index:80;padding-bottom:2rem}
-  .frame iframe{height:380px}
+  .is3d .panel.open,.is3d .panel.wide.open{transform:none}
+  .is3d #p-market,.is3d #p-posts,.is3d #p-audit{height:78vh}
+  .frame iframe{height:420px}
 }
 
 /* intro */
@@ -183,3 +189,10 @@ html:not(.is3d) .cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .intro-d{margin:0;max-width:56ch;font-size:.95rem;line-height:1.5;color:#d9d1bc}
 .intro-d b{color:#fff}
 #boot{min-height:0}
+
+/* phone: arrows to move along the room */
+.pan{display:none}
+.is3d.port.live .pan{display:grid;place-items:center;position:fixed;top:46%;z-index:30;width:40px;height:56px;background:rgba(0,0,0,.72);border:1px solid var(--amber);color:var(--amber);font:800 1.1rem/1 var(--mono);cursor:pointer}
+.pan.l{left:0;border-left:0}.pan.r{right:0;border-right:0}
+.pan:disabled{opacity:.25}
+.panel-open .pan{display:none!important}

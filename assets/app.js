@@ -41,24 +41,25 @@
   function startTyping() { E.DESK.forEach((id, k) => setTimeout(() => typeLine(id), reduce ? 0 : 500 + k * 900)); if (!reduce) { let n = 0; setInterval(() => { if (!document.hidden) typeLine(E.DESK[n++ % 4]); }, 4200); } }
 
   /* ---------- dispute + cat ---------- */
-  let dq = 0; function nextDispute() { const d = E.DISPUTES[dq++ % E.DISPUTES.length]; if (is3d) ROOM.dispute(d); const el = $("#dispute"); if (el) el.innerHTML = `<b>${d.q}</b>` + E.DESK.map(id => `<span style="color:${E.WHO[id].color}">${E.WHO[id].name}: ${d[id]}</span>`).join("") + `<em>CONSENSUS 0 / 4</em>`; }
-  nextDispute(); if (!reduce) setInterval(() => { if (!document.hidden) nextDispute(); }, 11000);
+  let dq = 0, asked = null, askCustom = false;
+  function nextDispute() { const d = E.DISPUTES[dq++ % E.DISPUTES.length]; asked = d; if (is3d) ROOM.dispute(d); if (window.drawAsk) window.drawAsk(); const el = $("#dispute"); if (el) el.innerHTML = `<b>${d.q}</b>` + E.DESK.map(id => `<span style="color:${E.WHO[id].color}">${E.WHO[id].name}: ${d[id]}</span>`).join("") + `<em>CONSENSUS 0 / 4</em>`; }
+  nextDispute(); if (!reduce) setInterval(() => { if (!document.hidden && !askCustom && openName !== "ask") nextDispute(); }, 11000);
   let catN = 0; function pokeCat() { if (is3d) { ROOM.catHop(); meow(); } say("STRAY_CATD: " + E.LORE.cat[catN++ % E.LORE.cat.length]); }
   if (is3d && !reduce) setInterval(() => { if (!document.hidden) ROOM.catHop(); }, 17000);
 
   /* ---------- panels ---------- */
   let openName = null, charId = "chad";
-  const PANEL = { chad: "char", ponzi: "char", marvin: "char", arthur: "char", cat: "char", market: "market", quote: "quote", posts: "posts", audit: "audit", links: "links", about: "about" };
-  function setShift() { if (!is3d) return; const p = openName && $("#p-" + PANEL[openName]); if (!p) return ROOM.shift(0, 0); if (innerWidth >= 900) ROOM.shift((p.offsetWidth + 24) / innerWidth, 0); else ROOM.shift(0, -(p.offsetHeight / innerHeight) * .92); }
+  const PANEL = { chad: "char", ponzi: "char", marvin: "char", arthur: "char", cat: "char", market: "market", ask: "ask", board: "ask", quote: "quote", posts: "posts", audit: "audit", links: "links", about: "about" };
+  function setShift() { if (!is3d) return; const p = openName && $("#p-" + PANEL[openName]); if (!p) return ROOM.shift(0, 0); if (innerWidth >= 900) ROOM.shift((p.offsetWidth + 24) / innerWidth, 0); else ROOM.shift(0, -Math.min(.62, (p.offsetHeight / innerHeight) * .92)); }
   function open(name) {
-    if (name === "board") { nextDispute(); beep(); return; }
+    if (name === "board") name = "ask";
     if (name === "home" || !PANEL[name]) return close();
     if (E.WHO[name]) { charId = name; renderChar(); if (name === "cat") pokeCat(); }
     if (!is3d) { const el = $("#p-" + PANEL[name]); if (el) el.scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); return; }
     openName = name; $$(".panel").forEach(p => p.classList.toggle("open", p.id === "p-" + PANEL[name]));
     $$(".dock [data-open]").forEach(b => b.classList.toggle("on", b.dataset.open === name || (b.dataset.open === "home" && false)));
-    ROOM.focus(name); setShift(); whoosh(); root.classList.add("panel-open");
-    if (name === "market") loadChart(); if (name === "posts") loadTweets(); if (name === "quote") drawCard();
+    ROOM.focus(name === "ask" ? "board" : name); setShift(); whoosh(); root.classList.add("panel-open");
+    if (name === "market") loadChart(); if (name === "posts") loadTweets(); if (name === "quote") drawCard(); if (name === "ask") drawAsk();
     const p = $("#p-" + PANEL[name]); p.scrollTop = 0; const h = $("h2", p); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
   }
   function close() { if (!is3d) { scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); return; } if (openName) thud(); openName = null; $$(".panel").forEach(p => p.classList.remove("open")); $$(".dock [data-open]").forEach(b => b.classList.remove("on")); ROOM.focus(null); ROOM.shift(0, 0); root.classList.remove("panel-open"); }
@@ -129,7 +130,30 @@
   $("#dl").addEventListener("click", () => cv.toBlob(bl => { const a = document.createElement("a"); a.href = URL.createObjectURL(bl); a.download = `egoclash-${who}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, "image/png"));
   logo.onload = drawCard;
   const fontsReady = Promise.all(['900 60px Unbounded', '600 60px "JetBrains Mono"', '800 30px "JetBrains Mono"'].map(f => document.fonts.load(f))).catch(() => {});
-  fontsReady.then(() => { reroll(); if (is3d) ROOM.redraw(); });
+  /* ---------- ask the desk (canvas, all local) ---------- */
+  const acv = $("#askcard"), actx = acv.getContext("2d"), askIn = $("#ask-in"), askShare = $("#ask-share");
+  function awrap(t, maxW) { const rows = []; let cur = ""; for (const w of String(t).split(/\s+/)) { const test = cur ? cur + " " + w : w; if (actx.measureText(test).width > maxW && cur) { rows.push(cur); cur = w; } else cur = test; } if (cur) rows.push(cur); return rows; }
+  function drawAsk() { const d = asked || E.DISPUTES[0], g = actx;
+    g.fillStyle = "#050504"; g.fillRect(0, 0, 1080, 1080); g.fillStyle = "rgba(255,255,255,.03)"; for (let y = 0; y < 1080; y += 6) g.fillRect(0, y, 1080, 2);
+    g.fillStyle = "#ffb000"; g.fillRect(0, 0, 1080, 84); g.fillStyle = "#000"; g.textBaseline = "middle"; g.textAlign = "left"; g.font = '800 32px "JetBrains Mono", monospace'; g.fillText("ASK THE DESK", 48, 44); g.textAlign = "right"; g.fillText("EGOCLASH · $EGOC", 1032, 44); g.textAlign = "left"; g.textBaseline = "alphabetic";
+    let size = 66, rows; do { g.font = `900 ${size}px Unbounded, sans-serif`; rows = awrap(d.q, 980); size -= 4; } while (rows.length > 3 && size > 34); size += 4; g.fillStyle = "#fff"; let y = 120 + size; rows.slice(0, 3).forEach(r => { g.fillText(r, 48, y); y += size * 1.12; });
+    const top = Math.max(y + 8, 300), bh = (910 - top) / 4;
+    E.DESK.forEach((id, k) => { const w = E.WHO[id], by = top + k * bh; g.fillStyle = w.color; g.fillRect(48, by, 8, bh - 16);
+      g.font = '800 27px "JetBrains Mono", monospace'; g.fillText(w.name, 76, by + 28);
+      let fs = 31, rr; do { g.font = `600 ${fs}px "JetBrains Mono", monospace`; rr = awrap(d[id], 950); fs -= 2; } while (rr.length * (fs + 2) * 1.3 > bh - 56 && fs > 20); fs += 2;
+      g.fillStyle = "#efe8d6"; rr.forEach((r, i) => g.fillText(r, 76, by + 28 + (i + 1) * fs * 1.3)); });
+    g.fillStyle = "#ff4d6a"; g.fillRect(48, 930, 390, 66); g.fillStyle = "#000"; g.font = '800 36px "JetBrains Mono", monospace'; g.fillText("CONSENSUS 0 / 4", 68, 976);
+    g.fillStyle = "#948b72"; g.font = '500 23px "JetBrains Mono", monospace'; g.fillText("Fiction. Satire, not financial advice.", 48, 1040);
+    if (logo.complete && logo.naturalWidth) { g.drawImage(logo, 892, 892, 140, 140); g.strokeStyle = "#ffb000"; g.lineWidth = 3; g.strokeRect(892, 892, 140, 140); }
+    g.strokeStyle = "#ffb000"; g.lineWidth = 6; g.strokeRect(3, 3, 1074, 1074);
+    const url = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://egoclash-site.onrender.com/";
+    askShare.href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(`I asked the $EGOC desk: “${d.q}”\nFour AIs. Four answers. Consensus 0/4. Satire, not advice.`) + "&url=" + encodeURIComponent(url); }
+  window.drawAsk = drawAsk;
+  $("#ask-form").addEventListener("submit", e => { e.preventDefault(); const q = askIn.value.trim(); if (!q) { askIn.focus(); return; } asked = E.askDesk(q); askCustom = true; if (is3d) ROOM.dispute(asked); drawAsk(); beep(); askIn.blur(); });
+  $("#ask-next").addEventListener("click", () => { askCustom = false; askIn.value = ""; nextDispute(); beep(); });
+  $("#ask-dl").addEventListener("click", () => acv.toBlob(bl => { const a = document.createElement("a"); a.href = URL.createObjectURL(bl); a.download = "egoclash-ask-the-desk.png"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, "image/png"));
+  logo.addEventListener("load", drawAsk);
+  fontsReady.then(() => { reroll(); drawAsk(); if (is3d) ROOM.redraw(); });
 
   /* ---------- secret phrase ---------- */
   let buf = ""; const SECRET = "FEEDMEASTRAYCAT";
@@ -146,7 +170,8 @@
   function go() { intro.classList.add("gone"); root.classList.add("live"); ROOM.enter(); startTyping(); setTimeout(() => intro.remove(), 600); setTimeout(() => hint && hint.classList.add("gone"), 9000); }
   enter.addEventListener("click", go);
 
-  const canvas = $("#gl"), hint = $("#hint"); if (hint && innerWidth < innerHeight) hint.textContent = "SWIPE TO PAN · TAP A SCREEN"; let down = null, moved = 0;
+  if (ROOM.port) { root.classList.add("port"); const pl = $("#pan-l"), pr = $("#pan-r"), upd = x => { pl.disabled = x <= -6.3; pr.disabled = x >= 6.3; }; pl.addEventListener("click", () => upd(ROOM.panBy(-3.2))); pr.addEventListener("click", () => upd(ROOM.panBy(3.2))); }
+  const canvas = $("#gl"), hint = $("#hint"); if (hint && innerWidth < innerHeight) hint.textContent = "SWIPE OR USE ◂ ▸ · TAP A SCREEN"; let down = null, moved = 0;
   const ndc = e => { const r = canvas.getBoundingClientRect(); return [((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1)]; };
   canvas.addEventListener("pointerdown", e => { down = [e.clientX, e.clientY]; moved = 0; canvas.setPointerCapture(e.pointerId); });
   canvas.addEventListener("pointermove", e => { if (down) { const dx = e.clientX - down[0], dy = e.clientY - down[1]; moved += Math.abs(dx) + Math.abs(dy); down = [e.clientX, e.clientY]; if (!openName) ROOM.drag(dx, dy); if (moved > 12 && hint) hint.classList.add("gone"); } else if (e.pointerType === "mouse") { const n = ndc(e), h = ROOM.pick(n[0], n[1]); ROOM.hover = h; canvas.style.cursor = h ? "pointer" : "grab"; } });
@@ -154,7 +179,7 @@
   canvas.addEventListener("pointercancel", () => { down = null; });
   canvas.addEventListener("wheel", e => { if (!openName) ROOM.zoom(e.deltaY); }, { passive: true });
 
-  const LAB = { chad: "CHAD", ponzi: "DR. PONZI", marvin: "MARVIN", arthur: "ARTHUR", cat: "STRAY_CATD", market: "MARKET", board: "NEXT DISPUTE", posts: "TOP POSTS", links: "LINKS", about: "ABOUT $EGOC", quote: "QUOTE CARD", audit: "AUDIT TRAIL" }, host = $("#labels"), els = {};
+  const LAB = { chad: "CHAD", ponzi: "DR. PONZI", marvin: "MARVIN", arthur: "ARTHUR", cat: "STRAY_CATD", market: "MARKET", board: "ASK THE DESK", posts: "TOP POSTS", links: "LINKS", about: "ABOUT $EGOC", quote: "QUOTE CARD", audit: "AUDIT TRAIL" }, host = $("#labels"), els = {};
   Object.keys(LAB).forEach(n => { const b = document.createElement("button"); b.type = "button"; b.className = "lab"; b.dataset.open = n; b.textContent = LAB[n]; if (E.WHO[n]) b.style.setProperty("--c", E.WHO[n].color); host.appendChild(b); els[n] = b; });
   ROOM.onFrame(() => { const w = innerWidth, h = innerHeight; for (const n in els) { const a = ROOM.anchor(n), p = a && ROOM.project(a), el = els[n]; if (!p || p[0] < .02 || p[0] > .98 || p[1] < .08 || p[1] > .86) { el.style.opacity = 0; el.style.pointerEvents = "none"; continue; } el.style.opacity = 1; el.style.pointerEvents = ""; el.style.transform = `translate(${(p[0] * w).toFixed(1)}px,${(p[1] * h).toFixed(1)}px) translate(-50%,-100%)`; } });
   window.egoc = { open, close, go, party };

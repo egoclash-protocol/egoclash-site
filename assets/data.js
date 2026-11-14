@@ -59,7 +59,24 @@ window.EGOC = (function () {
     let t, n = 0; do { t = pool[(Math.random() * pool.length) | 0]; } while (t === last && ++n < 8);
     return t;
   }
-  return { DISCORD_URL, CA, POOL, WHO, DESK, LORE, MOOD, DISPUTES, state, pickLine,
+  /* "Ask the desk": scripted, deterministic answers. Same question, same four answers. Never advice. */
+  const ASK = {
+    chad:   ["{Q}? YES. NO. BOTH. I TYPED IT IN CAPS SO IT IS TRUE.", "I ASKED THE CHAIR. THE CHAIR AGREES WITH ME.", "ANSWER: COLD BREW. NEXT QUESTION.", "IT WAS 04:12 WHEN YOU ASKED. THAT EXPLAINS EVERYTHING.", "I ANSWERED THIS DURING PUSH-UPS. I WAS RIGHT."],
+    ponzi:  ["A fine question. See footnote 1. There is no footnote 1.", "In theory, yes. In practice, I lost my chair.", "The answer is a community. I forget the question.", "My accountant advised me not to answer that.", "I wrote a paper on this. Nobody read it. The answer is in it."],
+    marvin: ["For the record: you asked “{q}”. Nobody at this desk knows.", "For the record: Chad answered before reading it.", "For the record: this was asked before. I logged it. Nobody checked.", "For the record: the cat knows. The cat is not talking.", "For the record: three answers so far. All different."],
+    arthur: ["Filed under ‘questions’. The folder is full.", "No. And please stop shouting, Chad.", "I have opened an incident report about this question.", "Thirty years in risk. Still no.", "Noted in the notebook. In pencil."],
+    advice: { chad: "NICE TRY. EVEN I AM NOT ALLOWED TO ANSWER THAT.", ponzi: "Footnote: this desk does not give financial advice.", marvin: "For the record: nobody here can tell you what a price will do.", arthur: "No advice. Not now, not at 04:12. Do your own research." }
+  };
+  const ADVICE = /\b(buy|sell|price|pump|dump|moon|wen|invest\w*|profit\w*|target|ath|rich|lambo|hold|hodl|ape|entry|exit|rug|bullish|bearish|compr\w*|vend\w*|prezzo|guadagn\w*)\b|\d\s*x\b|\bx\s*\d|[$€]\s*\d/i;
+  function askDesk(q) {
+    q = String(q || "").replace(/\s+/g, " ").trim().slice(0, 90); const out = { q };
+    if (ADVICE.test(q)) { DESK.forEach(id => out[id] = ASK.advice[id]); out.advice = true; return out; }
+    let h = 2166136261; for (let i = 0; i < q.length; i++) { h ^= q.toLowerCase().charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    const bare = q.replace(/[?!.\s]+$/, ""), Q = bare.toUpperCase().slice(0, 34), ql = bare.slice(0, 46);
+    DESK.forEach((id, k) => { const pool = ASK[id]; out[id] = pool[(h >>> (k * 5)) % pool.length].replace("{Q}", Q).replace("{q}", ql); });
+    return out;
+  }
+  return { askDesk, DISCORD_URL, CA, POOL, WHO, DESK, LORE, MOOD, DISPUTES, state, pickLine,
            API: "https://api.dexscreener.com/latest/dex/tokens/" + CA,
            DEX: "https://dexscreener.com/solana/" + POOL };
 })();
